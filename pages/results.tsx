@@ -54,10 +54,10 @@ function Results() {
                             
                     <div style={{ marginLeft: '2em' }}>
                         <p style={{fontSize: '20px'}}>
-                            Distance: <strong>{distanceScore}</strong>/{maxScore} 
-                            <span style={{ marginLeft: '2em' }}>Time: <strong>{timeScore}</strong>/{maxScore}</span>
+                            <strong>Distance:</strong> {distanceScore}/{maxScore} 
+                            <span style={{ marginLeft: '2em' }}><strong>Time: </strong>{timeScore}/{maxScore}</span>
                         </p>
-                        <p style={{ fontSize: '28px', marginBottom: '10px' }}> Score: <strong>{totalScore}</strong>/{2 * maxScore}</p>
+                        <p style={{ fontSize: '28px', marginBottom: '10px' }}> <strong>Score: </strong>{totalScore}/{2 * maxScore}</p>
                         <progress value={totalScore} max={2 * maxScore} style={{ width: '100%', height: '36px' }}></progress>
                     </div>
                 </div>
