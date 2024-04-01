@@ -20,6 +20,12 @@ const Map = ({userLat, userLng, correctLat, correctLng }: MapProps) => {
             return;
         }
 
+        // Check if userLat and correctLat are defined and are numbers
+        if (isNaN(userLat) || isNaN(correctLat)) {
+            console.error('Invalid coordinates');
+            return;
+        }
+
         const map = new window.google.maps.Map(mapRef.current, {
             center: { lat: userLat, lng: userLng },
             zoom: 4,

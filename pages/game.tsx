@@ -64,6 +64,7 @@ export default function Game() {
             setCurrentImage(JSON.parse(storedImage));
         } else {
             loadNewImage();
+            localStorage.removeItem('scoreAdded');
         }
     }, []);
 
@@ -130,7 +131,6 @@ export default function Game() {
         const resultString = `Guess: ${userGuessLocation.lat}, ${userGuessLocation.lng} on ${userGuessTime.toDateString()} Answer: ${correctLocation.lat}, ${correctLocation.lng} on ${correctTime.toDateString()} Error: ${distance.toFixed(2)} miles, ${diffDays} days.`;        
         setResult(resultString);
         
-        localStorage.removeItem('currentImage');
         localStorage.setItem('round', (round + 1).toString());
         router.push(`/results?result=${encodeURIComponent(resultString)}`);
     };
@@ -192,8 +192,7 @@ export default function Game() {
                             </div>
                         </div>
                         <div className="button-container">
-                            <button type="submit" style={{ fontSize: '20px', padding: '5px', width: '100%' }}>Guess</button>
-                        </div>
+                            <button type="submit" className="guess-button">Guess</button>                        </div>
                     </div>
                 </div>
             </form>

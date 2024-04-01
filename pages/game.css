@@ -7,9 +7,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
+    padding: 10px;
 }
 
 .map-container {
@@ -35,4 +33,21 @@ body {
 
 .button-container {
     padding: 10px;
+}
+
+.guess-button {
+    font-size: 24px;
+    padding: 5px;
+    width: 100%;
+    background-color: red;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.guess-button:hover {
+    background-color: rgb(197, 0, 0);
+}
+
+.guess-button:active {
+    transform: scale(0.95);
 }

@@ -5,6 +5,13 @@ import { useEffect, useState } from 'react';
 import './game.css';
 
 function Results() {
+    const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null }>({ file: '', lat: null, lng: null, time: null }); 
+    useEffect(() => {
+        const storedImage = localStorage.getItem('currentImage');
+        if (storedImage) {
+            setCurrentImage(JSON.parse(storedImage));
+        }
+    }, []);
     const [round, setRound] = useState(1);
     useEffect(() => {
         const storedRound = localStorage.getItem('round');
@@ -34,43 +41,69 @@ function Results() {
     useEffect(() => {
         const storedScores = localStorage.getItem('scores');
         const scores = storedScores ? JSON.parse(storedScores) : [];
-        scores.push(totalScore);
-        localStorage.setItem('scores', JSON.stringify(scores));
+        const scoreAdded = localStorage.getItem('scoreAdded');
+
+        if (!scoreAdded) {
+            scores.push(totalScore);
+            localStorage.setItem('scores', JSON.stringify(scores));
+            localStorage.setItem('scoreAdded', 'true');
+        }
     }, [totalScore]);
 
     return (
-        <main className='results-div'>
-            <div style={{padding: '10px'}}>
-                <h2>Round {round-1} Results</h2>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <div style={{ marginRight: '2em' }}>
-                        <p style={{fontSize: '24px'}}>You were <strong>{distanceErr}</strong> miles away and <strong>{timeErr}</strong> days off.</p>
-                        
+        <main style={{padding: '20px'}}>
+            <h2>Round {round-1} Results</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <p style={{ fontSize: '28px', marginBottom: '0.5em'}}> <strong>Score: </strong>{totalScore}/{2 * maxScore}</p>
+                <progress value={totalScore} max={2 * maxScore} style={{ width: '50%', height: '36px' }}></progress>
+            </div>   
+            <div className='results-div'>             
+                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '36px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {
+                            (() => {  
+                                return currentImage && currentImage.file && (
+                                    <div style={{ position: 'relative', width: '45vw', height: '45vh' }}>
+                                        <img
+                                            src={`/images/${currentImage.file}`}
+                                            alt="Game Image"
+                                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                        />
+                                    </div>
+                                );
+                            })()
+                        }
+                        <p style={{fontSize: '24px'}}>You were <strong>{timeErr} days </strong>off &mdash; {timeScore}/{maxScore} pts</p>
                         <p style={{fontSize: '20px'}}>
                             Guessed: {userTime.substring(4)}
                             <span style={{ marginLeft: '2em' }}>Actual: {correctTime.substring(4)}</span>
                         </p>
                     </div>
-                            
-                    <div style={{ marginLeft: '2em' }}>
-                        <p style={{fontSize: '20px'}}>
-                            <strong>Distance:</strong> {distanceScore}/{maxScore} 
-                            <span style={{ marginLeft: '2em' }}><strong>Time: </strong>{timeScore}/{maxScore}</span>
-                        </p>
-                        <p style={{ fontSize: '28px', marginBottom: '10px' }}> <strong>Score: </strong>{totalScore}/{2 * maxScore}</p>
-                        <progress value={totalScore} max={2 * maxScore} style={{ width: '100%', height: '36px' }}></progress>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Map userLat={userLat} userLng={userLng} correctLat={correctLat} correctLng={correctLng}/>
+                        <p style={{fontSize: '24px'}}>You were <strong>{distanceErr} miles</strong> away &mdash; {distanceScore}/{maxScore} pts</p>
                     </div>
                 </div>
-
-                <Map userLat={userLat} userLng={userLng} correctLat={correctLat} correctLng={correctLng}/>
                 
                 <div style={{ position: 'fixed', right: '20px', bottom: '20px', padding: '10px' }}>
-                {round <= 5 ? (
-                    <Link href="/game" style={{ fontSize: '24px'}}>Next</Link>
-                ) : (
-                    <Link href="/overallResults" style={{ fontSize: '24px'}}>Overall Results</Link>
-                )}
-            </div>
+                    {round <= 5 ? (
+                        <Link 
+                            href="/game" 
+                            style={{ fontSize: '24px'}}
+                            onClick={() => localStorage.removeItem('currentImage')}
+                        >
+                            Next Round
+                        </Link>
+                    ) : (
+                        <Link 
+                            href="/overallResults" 
+                            style={{ fontSize: '24px'}}
+                            onClick={() => localStorage.removeItem('currentImage')}
+                        >
+                            Overall Results
+                        </Link>
+                    )}
+                </div>
 
             </div>
         </main>
