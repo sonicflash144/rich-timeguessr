@@ -42,8 +42,8 @@ function Results() {
         <main className='results-div'>
             <div style={{padding: '10px'}}>
                 <h2>Round {round-1} Results</h2>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <div style={{ marginRight: '2em' }}>
                         <p style={{fontSize: '24px'}}>You were <strong>{distanceErr}</strong> miles away and <strong>{timeErr}</strong> days off.</p>
                         
                         <p style={{fontSize: '20px'}}>
@@ -52,18 +52,17 @@ function Results() {
                         </p>
                     </div>
                             
-                    <div>
+                    <div style={{ marginLeft: '2em' }}>
+                        <p style={{fontSize: '20px'}}>
+                            Distance: <strong>{distanceScore}</strong>/{maxScore} 
+                            <span style={{ marginLeft: '2em' }}>Time: <strong>{timeScore}</strong>/{maxScore}</span>
+                        </p>
                         <p style={{ fontSize: '28px', marginBottom: '10px' }}> Score: <strong>{totalScore}</strong>/{2 * maxScore}</p>
                         <progress value={totalScore} max={2 * maxScore} style={{ width: '100%', height: '36px' }}></progress>
                     </div>
                 </div>
 
                 <Map userLat={userLat} userLng={userLng} correctLat={correctLat} correctLng={correctLng}/>
-
-                <p style={{fontSize: '20px'}}>
-                    Distance: <strong>{distanceScore}</strong>/{maxScore} 
-                    <span style={{ marginLeft: '2em' }}>Time: <strong>{timeScore}</strong>/{maxScore}</span>
-                </p>
                 
                 <div style={{ position: 'fixed', right: '20px', bottom: '20px', padding: '10px' }}>
                 {round <= 5 ? (
