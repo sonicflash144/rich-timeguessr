@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import './game.css';
 
 function OverallResults() {
     const [totalScore, setTotalScore] = useState(0);
