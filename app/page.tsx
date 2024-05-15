@@ -31,7 +31,7 @@ export default function Home() {
       formData.append('file', file);
     });
 
-    const res = await fetch('/api/upload', {
+    const res = await fetch('http://localhost:5328/python/upload', {
       method: 'POST',
       body: formData,
     });

@@ -9,6 +9,7 @@ import os
 import boto3
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+bucket_name = 'custom-timeguessr'
 s3 = boto3.client('s3')
 import json
 from PIL import Image
@@ -96,6 +97,33 @@ def write_to_s3(bucket_name, data, filename):
     json_data = json.dumps(data).encode('utf-8')
     s3.put_object(Bucket=bucket_name, Key=filename, Body=json_data, ContentType='application/json')
 
+@app.route('/python/upload', methods=['POST'])
+def upload_files():
+    if 'file' not in request.files:
+        return jsonify({"error": "No files part"}), 400
+
+    files = request.files.getlist('file')
+    if not files:
+        return jsonify({"error": "No files selected"}), 400
+
+    folder_name = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    uploads = []
+
+    for file in files:
+        key = f"{folder_name}/{file.filename}"
+        try:
+            s3.upload_fileobj(
+                Fileobj=file,
+                Bucket=bucket_name,
+                Key=key,
+                ExtraArgs={'ContentType': file.mimetype}
+            )
+            uploads.append(key)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    return jsonify({"folderName": folder_name, "files": uploads})
+
 @app.route('/python/metadata', methods=['GET'])
 def metadata():
     bucket_name = 'custom-timeguessr'
@@ -110,7 +138,7 @@ def handler():
     try:
         bucket_name = 'custom-timeguessr'
         folder_name = request.args.get('folderName')
-        
+
         image_data_key = f'{folder_name}/autoImageData.json'
         image_data_obj = s3.get_object(Bucket=bucket_name, Key=image_data_key)
         image_data = json.loads(image_data_obj['Body'].read().decode('utf-8'))
