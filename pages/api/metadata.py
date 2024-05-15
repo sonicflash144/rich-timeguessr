@@ -1,3 +1,8 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)
+    
 from dotenv import load_dotenv
 load_dotenv('.env.local')
 import os
@@ -93,9 +98,10 @@ def write_to_json(data, filename):
     with open(os.path.join('public', filename), 'w') as f:
         json.dump(data, f)
 
-def main():
+@app.route('/python/metadata', methods=['GET'])
+def metadata():
     bucket_name = 'custom-timeguessr'
-    folder_name = sys.argv[1]
+    folder_name = request.args.get('folderName')
 
     local_directory = 'public/images'
     if os.path.exists(local_directory):
@@ -111,5 +117,7 @@ def main():
     # Save the processed data to JSON
     write_to_json(images_data, 'autoImageData.json')
 
+    return jsonify(images_data)
+
 if __name__ == '__main__':
-    main()
+    app.run(port=5328)

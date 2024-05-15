@@ -41,12 +41,11 @@ export default function Home() {
       const { folderName } = await res.json();
       localStorage.setItem('folderName', folderName);
       
-      const res_metadata = await fetch('/api/run_python_script', {
-        method: 'POST',
+      const res_metadata = await fetch(`http://localhost:5328/python/metadata?folderName=${folderName}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ folderName }),
       });
 
       if (res_metadata.ok) {
