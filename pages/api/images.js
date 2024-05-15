@@ -24,6 +24,5 @@ export default function handler(req, res) {
         };
     });
 
-    console.log(json(imagesWithMetadata));
     res.status(200).json(imagesWithMetadata);
 }
