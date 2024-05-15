@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Map from '../components/Map';
 import './game.css';
+import { String } from 'aws-sdk/clients/cloudtrail';
 
 // Define the start and end dates
 const startDate = new Date('2005-04-08').getTime();
@@ -10,7 +11,7 @@ const endDate = new Date().getTime();
 const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
 
 export default function Game() {
-    const [round, setRound] = useState(1);
+    const [round, setRound] = useState(0);
     const [result, setResult] = useState('');
     const router = useRouter();
     const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null }>({ file: '', lat: null, lng: null, time: null });
@@ -19,7 +20,49 @@ export default function Game() {
     const [month, setMonth] = useState(userGuessTime.getMonth());
     const [day, setDay] = useState(userGuessTime.getDate());
     const [year, setYear] = useState(userGuessTime.getFullYear());
-    const [imageUrls, setImageUrls] = useState([]);
+    const [gameLink, setGameLink] = useState('');
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        let folderNameParam = params.get('folderName');
+        let randomIndexesParam = JSON.stringify(params.get('5_indexes'));
+        if(folderNameParam && randomIndexesParam){
+            folderNameParam = folderNameParam.replace(/"/g, '');
+            randomIndexesParam = randomIndexesParam.replace(/"/g, '');
+            localStorage.setItem('5_indexes', randomIndexesParam);
+            localStorage.removeItem('round');
+            localStorage.removeItem('gameLink');
+        }   
+        let link: String;
+        if(localStorage.getItem('gameLink')){
+            link = localStorage.getItem('gameLink')!;
+        }
+        else{
+            const generateGameLink = () => {
+                let folderName, randomIndexes;
+                if (folderNameParam && randomIndexesParam) {
+                    folderName = folderNameParam;
+                    randomIndexes = randomIndexesParam;
+                } else {
+                    folderName = localStorage.getItem('folderName') || '';
+                    randomIndexes = localStorage.getItem('5_indexes') || '';
+                }
+            
+                const newParams = new URLSearchParams({
+                    'folderName': JSON.stringify(folderName),
+                    '5_indexes': randomIndexes
+                });
+                return `${window.location.origin}${window.location.pathname}?${newParams.toString()}`;
+            };
+            link = generateGameLink();   
+        }
+        setGameLink(link);
+        localStorage.setItem('gameLink', link);
+    }, []);
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(gameLink);
+    };
 
     useEffect(() => {
         const storedRound = localStorage.getItem('round');
@@ -34,50 +77,71 @@ export default function Game() {
         }
     }, []);
 
-    useEffect(() => {
-        const folderName = localStorage.getItem('folderName');
-        const fetchImageUrls = async () => {
-        const res = await fetch(`/api/fetch_images?folderName=${folderName}`);
-        const data = await res.json();
-        setImageUrls(data.imageUrls);
-        };
-        fetchImageUrls();
-    }, []);
-
     const loadNewImage = async () => {
         const res = await fetch('/api/images');
         const images = await res.json();
 
+        let randomIndexes = [];
+        const storedIndexes = localStorage.getItem('5_indexes');
+        randomIndexes = storedIndexes ? JSON.parse(storedIndexes) : [];
+
         const shownImagesItem = localStorage.getItem('shownImages');
         let shownImages = shownImagesItem ? new Set(JSON.parse(shownImagesItem)) : new Set();
+        const currentIndex = round - 1;
 
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * images.length);
-        } while (shownImages.has(randomIndex));
+       // If randomIndexes is empty or all indexes have been used, generate a new group of 5 random indexes
+        if (randomIndexes.length === 0) {
+            randomIndexes = [];
+            // Generate a list of all possible indexes
+            let allIndexes = Array.from({ length: images.length }, (_, i) => i);
+            // Shuffle the list
+            for (let i = allIndexes.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allIndexes[i], allIndexes[j]] = [allIndexes[j], allIndexes[i]];
+            }
+            // Take the first 5 indexes that are not in shownImages
+            for (let i = 0; randomIndexes.length < 5; i++) {
+                if(shownImages.size == images.length){
+                    shownImages.clear();
+                }
+                if(i >= allIndexes.length){
+                    i = 0;
+                }
+                if (!shownImages.has(allIndexes[i])) {
+                    randomIndexes.push(allIndexes[i]);
+                    shownImages.add(allIndexes[i]);
+                }
+            }
+            if(shownImages.size < 5){
+                shownImages.clear();
+                randomIndexes.forEach((index: Number) => shownImages.add(index));
+            }
+            localStorage.setItem('shownImages', JSON.stringify(Array.from(shownImages)));
+            localStorage.setItem('5_indexes', JSON.stringify(randomIndexes));
 
-        shownImages.add(randomIndex);
-        localStorage.setItem('shownImages', JSON.stringify(Array.from(shownImages)));
+            let folderName = localStorage.getItem('folderName') || '';
+            const newParams = new URLSearchParams({
+                'folderName': JSON.stringify(folderName),
+                '5_indexes': JSON.stringify(randomIndexes)
+            });
+            let link = `${window.location.origin}${window.location.pathname}?${newParams.toString()}`;
+            setGameLink(link);
+            localStorage.setItem('gameLink', link);
+        }
 
-        const newImage = images[randomIndex];
+        const newImageIndex = randomIndexes[currentIndex];
+        const newImage = images[newImageIndex];
         localStorage.setItem('currentImage', JSON.stringify(newImage));
         setCurrentImage(newImage);
-
-        // If all images have been shown, clear the local storage
-        if (shownImages.size === images.length) {
-            localStorage.removeItem('shownImages');
-        }
     };
 
     useEffect(() => {
-        const storedImage = localStorage.getItem('currentImage');
-        if (storedImage) {
-            setCurrentImage(JSON.parse(storedImage));
-        } else {
-            loadNewImage();
-            localStorage.removeItem('scoreAdded');
+        if (round === 0) {
+            return;
         }
-    }, []);
+        loadNewImage();
+        localStorage.removeItem('scoreAdded');
+    }, [round]);
 
     const handleSliderChange = (value: number) => {
         const newGuessTime = new Date(startDate + value * 24 * 60 * 60 * 1000);
@@ -116,7 +180,6 @@ export default function Game() {
         // Correct location and time
         const correctLocation = { lat: currentImage.lat, lng: currentImage.lng };
         const correctTime = currentImage.time ? new Date(currentImage.time) : null;
-        console.log(currentImage);
 
         if (correctLocation.lat === null || correctLocation.lng === null || correctTime === null) {
             console.log('Correct location or time is null');
@@ -148,7 +211,10 @@ export default function Game() {
     
     return (
         <main style={{ padding: '20px' }}>
-            <h2>Round {round} of 5</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <h2>Round {round} of 5</h2>
+                <button className="copy-link-button" onClick={copyToClipboard}>Copy Game Link</button>
+            </div>
             <div>
                 {currentImage && currentImage.file && (
                     <div style={{ position: 'relative', width: '45vw', height: '45vh' }}>
@@ -203,7 +269,8 @@ export default function Game() {
                             </div>
                         </div>
                         <div className="button-container">
-                            <button type="submit" className="guess-button">Guess</button>                        </div>
+                            <button type="submit" className="guess-button">Guess</button>
+                        </div>
                     </div>
                 </div>
             </form>

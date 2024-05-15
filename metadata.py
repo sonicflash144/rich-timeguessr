@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv('.env.local')
 import os
+import shutil
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 import json
@@ -95,7 +96,11 @@ def write_to_json(data, filename):
 def main():
     bucket_name = 'custom-timeguessr'
     folder_name = sys.argv[1]
+
     local_directory = 'public/images'
+    if os.path.exists(local_directory):
+        shutil.rmtree(local_directory)
+    os.makedirs(local_directory)
 
     # Download images from S3 to local directory
     download_images_from_s3(bucket_name, folder_name, local_directory)

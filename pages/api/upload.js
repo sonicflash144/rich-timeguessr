@@ -35,6 +35,7 @@ router.post(async (req, res) => {
     const results = await Promise.all(uploads);
     res.status(200).json({ data: results });
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({ error: error.message });
   }
 });

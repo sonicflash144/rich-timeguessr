@@ -4,6 +4,12 @@ import './game.css';
 
 function OverallResults() {
     const [totalScore, setTotalScore] = useState(0);
+    const [gameLink, setGameLink] = useState('');
+
+    useEffect(() => {
+        const storedLink = localStorage.getItem('gameLink');
+        setGameLink(storedLink || '');
+    }, []);
 
     useEffect(() => {
         const storedScores = localStorage.getItem('scores');
@@ -12,9 +18,15 @@ function OverallResults() {
         setTotalScore(sum);
     }, []);
 
-    const playAgain = () => {
+    const newGame = () => {
         localStorage.setItem('round', '1');
+        localStorage.removeItem('5_indexes');
+        localStorage.removeItem('currentImage');
+        localStorage.removeItem('gameLink');
     };
+    const copyLink = () => {
+        navigator.clipboard.writeText(gameLink);
+    }
 
     return (
         <div style={{padding: '10px'}}>
@@ -23,10 +35,16 @@ function OverallResults() {
                 <p style={{ fontSize: '32px' }}>You scored <strong>{totalScore}</strong> out of 5000</p>
                 <progress value={totalScore} max={5000} style={{ height: '50px', width: '80%' }}></progress>
             </div>
-            <div style={{ marginTop: '10px', padding: '10px', textAlign: 'right' }}>
-                <Link href="/game" onClick={playAgain} style={{ fontSize: '24px' }}>
-                    Play Again
+           <div style={{ marginTop: '10px', padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                <Link href="/game" onClick={newGame} style={{ fontSize: '24px' }}>
+                    New Game
                 </Link>
+                <Link href="/" onClick={newGame} style={{ fontSize: '24px' }}>
+                    Home
+                </Link>
+                <button onClick={copyLink} style={{ fontSize: '16px' }}>
+                    Copy Game Link
+                </button>
             </div>
         </div>
     );
