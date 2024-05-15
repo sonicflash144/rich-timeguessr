@@ -79,6 +79,7 @@ export default function Game() {
 
     const loadNewImage = async () => {
         const res = await fetch('/api/images');
+        console.log(res);
         const images = await res.json();
 
         let randomIndexes = [];
