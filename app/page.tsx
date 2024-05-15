@@ -49,6 +49,8 @@ export default function Home() {
       });
 
       if (res_metadata.ok) {
+        const data = await res_metadata.json();
+        localStorage.setItem('autoImageData', JSON.stringify(data));
         setStatus('Metadata extracted. Starting game...');
         localStorage.removeItem('gameLink');
         localStorage.setItem('round', '1');

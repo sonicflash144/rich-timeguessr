@@ -6,32 +6,17 @@ CORS(app)
 from dotenv import load_dotenv
 load_dotenv('.env.local')
 import os
-import shutil
+import boto3
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+s3 = boto3.client('s3')
 import json
-import sys
 from PIL import Image
 from pillow_heif import register_heif_opener
 register_heif_opener()
 from PIL.ExifTags import GPSTAGS, IFD
 from datetime import datetime
-import boto3
-
-def download_images_from_s3(bucket_name, folder_name, local_directory):
-    s3 = boto3.client('s3')
-    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_name)
-    
-    if not os.path.exists(local_directory):
-        os.makedirs(local_directory)
-    
-    for obj in objects.get('Contents', []):
-        if obj['Key'].endswith(('/')):
-            continue  # Skip directories
-        local_path = os.path.join(local_directory, os.path.basename(obj['Key']))
-        s3.download_file(bucket_name, obj['Key'], local_path)
-
-    return local_directory
+from io import BytesIO
 
 def get_decimal_from_dms(dms, ref):
     degrees = dms[0]
@@ -54,8 +39,8 @@ def get_lat_lng(geotags):
 
     return lat, lng
 
-def get_image_metadata(image_path):
-    image = Image.open(image_path)
+def get_image_metadata(image_bytes):
+    image = Image.open(image_bytes)
     exif = image.getexif()
 
     geotags = {}
@@ -72,80 +57,78 @@ def get_image_metadata(image_path):
 
     return lat, lng, time_taken
 
-def get_images_data(directory):
+def process_images_from_s3(bucket_name, folder_name):
+    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_name)
     images_data = {}
-    for filename in os.listdir(directory):
-        if filename.lower().endswith(('.heic', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.tiff', '.webp')):
-            image_path = os.path.join(directory, filename)
-            lat, lng, time_taken = get_image_metadata(image_path)
-            if lat is None or lng is None or time_taken == "Unknown":
-                os.remove(image_path)
-            else:
-                if filename.lower().endswith('.heic'):
-                    image = Image.open(image_path)
-                    filename = filename.lower().replace('.heic', '.jpg')
-                    new_image_path = os.path.join(directory, filename)
-                    image.save(new_image_path, format('png'))
-                    os.remove(image_path)
-                images_data[filename] = {
-                    "lat": lat,
-                    "lng": lng,
-                    "time": time_taken
-                }
+
+    for obj in objects.get('Contents', []):
+        if obj['Key'].endswith('/'):
+            continue
+        file_stream = BytesIO()
+        s3.download_fileobj(bucket_name, obj['Key'], file_stream)
+        file_stream.seek(0)
+
+        lat, lng, time_taken = get_image_metadata(file_stream)
+        if lat is None or lng is None or time_taken == "Unknown":
+            continue  # Skip images without metadata
+        else:
+            file_name = os.path.basename(obj['Key'])
+            file_url = f"https://{bucket_name}.s3.amazonaws.com/{obj['Key']}"
+            if file_name.lower().endswith('.heic'):
+                image = Image.open(file_stream)
+                file_name = file_name.lower().replace('.heic', '.jpg')
+                image_bytes = BytesIO()
+                image.save(image_bytes, format('JPEG'))
+                image_bytes.seek(0)
+                new_key = f"{folder_name}/{file_name}"
+                s3.put_object(Bucket=bucket_name, Key=new_key, Body=image_bytes, ContentType='image/jpeg')
+                s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
+                file_url = f"https://{bucket_name}.s3.amazonaws.com/{new_key}"
+            images_data[file_name] = {
+                "lat": lat,
+                "lng": lng,
+                "time": time_taken,
+                "url": file_url
+            }
     return images_data
 
-def write_to_json(data, filename):
-    with open(os.path.join('public', filename), 'w') as f:
-        json.dump(data, f)
+def write_to_s3(bucket_name, data, filename):
+    json_data = json.dumps(data).encode('utf-8')
+    s3.put_object(Bucket=bucket_name, Key=filename, Body=json_data, ContentType='application/json')
 
 @app.route('/python/metadata', methods=['GET'])
 def metadata():
     bucket_name = 'custom-timeguessr'
     folder_name = request.args.get('folderName')
 
-    local_directory = 'public/images'
-    if os.path.exists(local_directory):
-        shutil.rmtree(local_directory)
-    os.makedirs(local_directory)
-
-    # Download images from S3 to local directory
-    download_images_from_s3(bucket_name, folder_name, local_directory)
-    
-    # Process images in the local directory
-    images_data = get_images_data(local_directory)
-    
-    # Save the processed data to JSON
-    write_to_json(images_data, 'autoImageData.json')
-
+    images_data = process_images_from_s3(bucket_name, folder_name)
+    write_to_s3(bucket_name, images_data, f'{folder_name}/autoImageData.json')
     return jsonify(images_data)
 
 @app.route('/python/images', methods=['GET'])
 def handler():
     try:
-        directory_path = os.path.join(os.getcwd(), 'public', 'images')
-        files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
+        bucket_name = 'custom-timeguessr'
+        folder_name = request.args.get('folderName')
+        
+        image_data_key = f'{folder_name}/autoImageData.json'
+        image_data_obj = s3.get_object(Bucket=bucket_name, Key=image_data_key)
+        image_data = json.loads(image_data_obj['Body'].read().decode('utf-8'))
 
-        image_extensions = ['.heic', '.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp', '.svg']
-        image_files = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
-
-        image_data_path = os.path.join(os.getcwd(), 'public', 'autoImageData.json')
-        with open(image_data_path, 'r') as f:
-            image_data = json.load(f)
-
-        images_with_metadata = []
-        for file in image_files:
-            metadata = image_data.get(file)
-            images_with_metadata.append({
+        images_with_metadata = [
+            {
                 'file': file,
-                'lat': metadata.get('lat') if metadata else None,
-                'lng': metadata.get('lng') if metadata else None,
-                'time': metadata.get('time') if metadata else None
-            })
+                'lat': metadata.get('lat'),
+                'lng': metadata.get('lng'),
+                'time': metadata.get('time'),
+                'url': metadata.get('url')
+            } for file, metadata in image_data.items()
+        ]
 
         return jsonify(images_with_metadata), 200
     except Exception as e:
         print(e)
         return jsonify({'message': 'Internal Server Error'}), 500
-
+    
 if __name__ == '__main__':
     app.run(port=5328)

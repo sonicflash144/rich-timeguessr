@@ -14,7 +14,7 @@ export default function Game() {
     const [round, setRound] = useState(0);
     const [result, setResult] = useState('');
     const router = useRouter();
-    const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null }>({ file: '', lat: null, lng: null, time: null });
+    const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null, url: string | null }>({ file: '', lat: null, lng: null, time: null, url: null});
     const [userGuessLocation, setUserGuessLocation] = useState<{ lat: number | null, lng: number | null }>({ lat: null, lng: null });
     const [userGuessTime, setUserGuessTime] = useState(new Date());
     const [month, setMonth] = useState(userGuessTime.getMonth());
@@ -30,6 +30,7 @@ export default function Game() {
             folderNameParam = folderNameParam.replace(/"/g, '');
             randomIndexesParam = randomIndexesParam.replace(/"/g, '');
             localStorage.setItem('5_indexes', randomIndexesParam);
+            localStorage.setItem('folderName', folderNameParam);
             localStorage.removeItem('round');
             localStorage.removeItem('gameLink');
         }   
@@ -50,7 +51,7 @@ export default function Game() {
             
                 const newParams = new URLSearchParams({
                     'folderName': JSON.stringify(folderName),
-                    '5_indexes': randomIndexes
+                    '5_indexes': randomIndexes,
                 });
                 return `${window.location.origin}${window.location.pathname}?${newParams.toString()}`;
             };
@@ -78,7 +79,8 @@ export default function Game() {
     }, []);
 
     const loadNewImage = async () => {
-        const res = await fetch('http://localhost:5328/python/images');
+        const folderName = localStorage.getItem('folderName') || '';
+        const res = await fetch(`http://localhost:5328/python/images?folderName=${folderName}`);
         const images = await res.json();
 
         let randomIndexes = [];
@@ -216,12 +218,13 @@ export default function Game() {
                 <button className="copy-link-button" onClick={copyToClipboard}>Copy Game Link</button>
             </div>
             <div>
-                {currentImage && currentImage.file && (
+                {currentImage && currentImage.url && (
                     <div style={{ position: 'relative', width: '45vw', height: '45vh' }}>
-                       <img
-                            src={`/images/${currentImage.file}`}
+                        <Image
+                            src={currentImage.url || ''}
                             alt="Game Image"
-                            style={{objectFit: "contain", width: "80%", height: "auto"}}
+                            layout="fill"
+                            objectFit="contain"
                         />
                     </div>
                 )}

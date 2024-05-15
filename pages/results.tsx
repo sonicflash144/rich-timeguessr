@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import './game.css';
 
 function Results() {
-    const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null }>({ file: '', lat: null, lng: null, time: null }); 
+    const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null, url: string | null }>({ file: '', lat: null, lng: null, time: null, url: null }); 
     useEffect(() => {
         const storedImage = localStorage.getItem('currentImage');
         if (storedImage) {
@@ -62,10 +62,10 @@ function Results() {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {
                             (() => {  
-                                return currentImage && currentImage.file && (
+                                return currentImage && currentImage.url && (
                                     <div style={{ position: 'relative', width: '45vw', height: '45vh' }}>
                                         <img
-                                            src={`/images/${currentImage.file}`}
+                                            src={currentImage.url || ''}
                                             alt="Game Image"
                                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                         />
