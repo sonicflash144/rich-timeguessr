@@ -218,11 +218,10 @@ export default function Game() {
             <div>
                 {currentImage && currentImage.file && (
                     <div style={{ position: 'relative', width: '45vw', height: '45vh' }}>
-                        <Image
+                       <img
                             src={`/images/${currentImage.file}`}
                             alt="Game Image"
-                            layout="fill"
-                            objectFit="contain"
+                            style={{objectFit: "contain", width: "80%", height: "auto"}}
                         />
                     </div>
                 )}
