@@ -6,7 +6,7 @@ import './game.css';
 
 // Define the start and end dates
 const startDate = new Date('2005-04-08').getTime();
-const endDate = new Date('2024-04-08').getTime();
+const endDate = new Date().getTime();
 const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
 
 export default function Game() {
@@ -15,10 +15,11 @@ export default function Game() {
     const router = useRouter();
     const [currentImage, setCurrentImage] = useState<{ file: string, lat: number | null, lng: number | null, time: string | null }>({ file: '', lat: null, lng: null, time: null });
     const [userGuessLocation, setUserGuessLocation] = useState<{ lat: number | null, lng: number | null }>({ lat: null, lng: null });
-    const [userGuessTime, setUserGuessTime] = useState(new Date('2024-04-08'));
+    const [userGuessTime, setUserGuessTime] = useState(new Date());
     const [month, setMonth] = useState(userGuessTime.getMonth());
     const [day, setDay] = useState(userGuessTime.getDate());
     const [year, setYear] = useState(userGuessTime.getFullYear());
+    const [imageUrls, setImageUrls] = useState([]);
 
     useEffect(() => {
         const storedRound = localStorage.getItem('round');
@@ -31,6 +32,16 @@ export default function Game() {
         if (roundNumber === 1) {
             localStorage.removeItem('scores');
         }
+    }, []);
+
+    useEffect(() => {
+        const folderName = localStorage.getItem('folderName');
+        const fetchImageUrls = async () => {
+        const res = await fetch(`/api/fetch_images?folderName=${folderName}`);
+        const data = await res.json();
+        setImageUrls(data.imageUrls);
+        };
+        fetchImageUrls();
     }, []);
 
     const loadNewImage = async () => {
