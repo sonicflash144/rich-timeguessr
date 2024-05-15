@@ -119,5 +119,33 @@ def metadata():
 
     return jsonify(images_data)
 
+@app.route('/python/images', methods=['GET'])
+def handler():
+    try:
+        directory_path = os.path.join(os.getcwd(), 'public', 'images')
+        files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
+
+        image_extensions = ['.heic', '.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp', '.svg']
+        image_files = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
+
+        image_data_path = os.path.join(os.getcwd(), 'public', 'autoImageData.json')
+        with open(image_data_path, 'r') as f:
+            image_data = json.load(f)
+
+        images_with_metadata = []
+        for file in image_files:
+            metadata = image_data.get(file)
+            images_with_metadata.append({
+                'file': file,
+                'lat': metadata.get('lat') if metadata else None,
+                'lng': metadata.get('lng') if metadata else None,
+                'time': metadata.get('time') if metadata else None
+            })
+
+        return jsonify(images_with_metadata), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Internal Server Error'}), 500
+
 if __name__ == '__main__':
     app.run(port=5328)
