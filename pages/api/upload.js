@@ -41,7 +41,6 @@ router.post(async (req, res) => {
 });
 
 export default router.handler();
-
 export const config = {
   api: {
     bodyParser: false,
