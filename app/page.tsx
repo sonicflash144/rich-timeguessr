@@ -42,10 +42,7 @@ export default function Home() {
       localStorage.setItem('folderName', folderName);
       
       const res_metadata = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/python/metadata?folderName=${folderName}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: 'GET'
       });
 
       if (res_metadata.ok) {
