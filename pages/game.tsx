@@ -80,7 +80,7 @@ export default function Game() {
 
     const loadNewImage = async () => {
         const folderName = localStorage.getItem('folderName') || '';
-        const res = await fetch(`http://localhost:5328/python/images?folderName=${folderName}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/python/images?folderName=${folderName}`);
         const images = await res.json();
 
         let randomIndexes = [];

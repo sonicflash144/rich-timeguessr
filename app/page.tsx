@@ -31,7 +31,7 @@ export default function Home() {
       formData.append('file', file);
     });
 
-    const res = await fetch('http://localhost:5328/python/upload', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/python/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -41,7 +41,7 @@ export default function Home() {
       const { folderName } = await res.json();
       localStorage.setItem('folderName', folderName);
       
-      const res_metadata = await fetch(`http://localhost:5328/python/metadata?folderName=${folderName}`, {
+      const res_metadata = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/python/metadata?folderName=${folderName}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
