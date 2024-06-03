@@ -120,6 +120,7 @@ def upload_files():
             )
             uploads.append(key)
         except Exception as e:
+            app.logger.error(f"Error uploading {file.filename} to S3: {e}")
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"folderName": folder_name, "files": uploads})
