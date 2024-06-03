@@ -2,9 +2,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
-    
-from dotenv import load_dotenv
-load_dotenv('.env.local')
 import os
 import boto3
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
