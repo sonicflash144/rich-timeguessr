@@ -223,8 +223,9 @@ export default function Game() {
                         <Image
                             src={currentImage.url || ''}
                             alt="Game Image"
-                            layout="fill"
-                            objectFit="contain"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 45vw"
+                            style={{ objectFit: 'contain' }}
                         />
                     </div>
                 )}

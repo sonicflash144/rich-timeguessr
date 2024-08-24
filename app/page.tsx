@@ -60,56 +60,33 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 gradient-bg">
+    <main className={`min-h-screen flex flex-col items-center justify-center p-8 ${
+      isLoading ? 'bg-gray-200' : 'bg-gradient-to-b from-blue-900 to-black background-globe'
+    }`}>
       {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh' }}>
-          {status}
+        <div className="flex flex-col items-center justify-center h-screen text-gray-800">
+          <p className="mb-4">{status}</p>
           <div className="loader"></div>
         </div>
       ) : (
-        <>
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-            <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-              <a
-                className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-              >
-                <span className="dark:invert">
-                  Upload your own photos to create a custom Timeguessr! Photos must have location and datetime metadata to work.
-                </span>
-              </a>
-            </div>
-          </div>
-
-          <div className="relative flex place-items-center">
-            <h1 className="text-4xl font-bold text-center">Create Your Own Custom Timeguessr!</h1>
-          </div>
-
-          <form onSubmit={handleUpload} className="flex flex-col items-center">
+        <div className="w-full max-w-2xl bg-white bg-opacity-85 p-8 rounded-2xl shadow-lg">
+          <h1 className="text-4xl font-bold text-center text-blue-900 mb-8">Create a Custom Timeguessr!</h1>
+          <p className="text-center text-gray-700 mb-8">
+            Photos must have location and datetime metadata to work.
+          </p>
+          
+          <form onSubmit={handleUpload} className="flex flex-col items-center justify-center space-y-4">
             <input
               type="file"
               multiple
               onChange={handleFileChange}
-              className="mb-8"
+              className="p-2 border border-gray-300 rounded"
             />
-            <button type="submit" className="group rounded-lg border border-black px-4 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-              Upload Photos
+            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+              Play Now
             </button>
           </form>
-
-          <Link href="/game">
-            <button className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-              <h2 className={`mb-3 text-2xl font-semibold`}>
-                Play{" "}
-                <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                  -&gt;
-                </span>
-              </h2>
-              <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-                Guess the location and time of each image.
-              </p>
-            </button>
-          </Link>
-        </>
+        </div>
       )}
     </main>
   );
