@@ -71,7 +71,7 @@ export default function Home() {
       ) : (
         <div className="w-full max-w-2xl bg-white bg-opacity-85 p-8 rounded-2xl shadow-lg">
           <h1 className="text-4xl font-bold text-center text-blue-900 mb-8">Create a Custom Timeguessr!</h1>
-          <p className="text-center text-gray-700 mb-8">
+          <p className="text-center text-gray-700 mb-4">
             Photos must have location and datetime metadata to work.
           </p>
           
