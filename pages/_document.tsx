@@ -1,5 +1,6 @@
 // pages/_document.tsx
 import Document, { Html, Head, Main, NextScript } from 'next/document';
+const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
 class MyDocument extends Document {
     render() {
@@ -8,7 +9,7 @@ class MyDocument extends Document {
                 <Head>
                     <script
                         id="googleMapsScript"
-                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfmH3oCUFCC8GAtgy1VoGeajs4Ed1gEEo"
+                        src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}`}
                         async
                     />
                 </Head>
